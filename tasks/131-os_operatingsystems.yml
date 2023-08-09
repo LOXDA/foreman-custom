@@ -1,0 +1,21 @@
+---
+
+- name: Create OS Operating System
+  theforeman.foreman.operatingsystem:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    release_name: "{{ item.release_name }}"
+    description: "{{ item.description }}"
+    password_hash: "{{ item.password_hash }}"
+    architectures: "{{ item.architectures }}"
+    family: "{{ item.family }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor }}"
+    ptables: "{{ item.ptables }}"
+    parameters: "{{ item.parameters }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  delegate_to: localhost

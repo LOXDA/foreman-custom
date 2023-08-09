@@ -1,0 +1,13 @@
+---
+
+# # CentOS available prov templates
+# - name: Assign smart-proxy to subnets
+#   theforeman.foreman.operatingsystem:
+#     username: "{{ foreman_admin_username }}"
+#     password: "{{ foreman_admin_password }}"
+#     server_url: "{{ foreman_url_app }}"
+#     validate_certs: false
+#     name: "{{ item.name }}"
+#     state: present
+#   loop: "{{ foreman_subnets }}"
+#   delegate_to: localhost

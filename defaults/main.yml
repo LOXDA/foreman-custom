@@ -1,0 +1,25 @@
+---
+# defaults file for foreman-custom
+
+# netbox.lab.loxda.net:
+#   servername: netbox.lab.loxda.net
+#   port: '80'
+#   proxy_preserve_host: true
+#   docroot: '/opt/netbox/netbox/'
+#   request_headers: 
+#     - 'set "X-Forwarded-Proto" expr=%{REQUEST_SCHEME}'
+#   proxy_pass:
+#     - path: '/'
+#       url: 'http://127.0.0.1:8001/'
+#       reverse_url: 'http://127.0.0.1:8001/'
+#   aliases:
+#     - alias: '/static'
+#       path: '/opt/netbox/netbox/static'
+#   wsgi_pass_authorization: 'On'
+#   directories:
+#     - path: '/opt/netbox/netbox/static'
+#       provider: 'directory'
+#       custom_fragment: 'Options Indexes FollowSymLinks MultiViews'
+#     - path: '/static'
+#       provider: 'location'
+#       custom_fragment: 'ProxyPass !'

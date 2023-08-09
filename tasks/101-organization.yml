@@ -1,0 +1,12 @@
+---
+
+- name: "Create Organization"
+  theforeman.foreman.organization:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    state: present
+  loop: "{{ foreman_organization }}"
+  delegate_to: localhost

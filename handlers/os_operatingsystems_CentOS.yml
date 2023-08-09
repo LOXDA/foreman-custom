@@ -1,0 +1,82 @@
+---
+# handlers file for foreman-custom
+
+# CentOS available prov templates
+- name: Assign Provisioning templates to OS CentOS
+  theforeman.foreman.operatingsystem:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor }}"
+    family: "{{ item.family }}"
+    provisioning_templates:
+      - Kickstart default
+      - Kickstart default finish
+      - Kickstart default PXELinux
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# CentOS set default : finish
+- name: Set CentOS default Provisioning templates to OS finish
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    template_kind: "finish"
+    provisioning_template: "Kickstart default finish"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# CentOS set default : provision
+- name: Set CentOS default Provisioning templates to OS provision
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    template_kind: "provision"
+    provisioning_template: "Kickstart default"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# CentOS set default : PXELinux
+- name: Set CentOS default Provisioning templates to OS PXELinux
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    template_kind: "PXELinux"
+    provisioning_template: "Kickstart default PXELinux"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# CentOS set default : registration
+- name: Set CentOS default registration templates to OS registration
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    template_kind: "registration"
+    provisioning_template: "Linux registration default"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost

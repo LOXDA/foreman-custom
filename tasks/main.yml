@@ -1,0 +1,64 @@
+---
+
+# - name: Display Target Variables
+#   ansible.builtin.debug:
+#     msg: |
+#       ====================== Display Variables For Provisioning =======================================
+
+#                                            Target: {{ inventory_hostname }}
+#                                  Ansible Playbook: {{ ansible_play_name }}
+#                                  Target.PuppetURl: {{ foreman_host_puppet }}
+#                                    Target.Foreman: {{ foreman_host_app }}
+#                                 Target.ForemanUrl: {{ foreman_url_app }}
+#                                      Target.Proxy: {{ foreman_host_proxy }}
+#                                   Target.ProxyUrl: {{ foreman_url_proxy }}
+#                                       Target.User: {{ foreman_admin_username }}
+#                                   Target.Password: {{ foreman_admin_password }}
+
+#       =================================================================================================
+
+# - name: Foremann APP webapp check status
+#   theforeman.foreman.status_info:
+#     server_url: "{{ foreman_url_app }}"
+#     username: "{{ foreman_admin_username }}"
+#     password: "{{ foreman_admin_password }}"
+#     validate_certs: false
+#   delegate_to: localhost
+
+# Auth sources
+- include_tasks: "100-auth-source.yml"
+
+# Common stuff
+- include_tasks: "101-organization.yml"
+- include_tasks: "102-location.yml"
+- include_tasks: "103-domain.yml"
+- include_tasks: "104-subnet.yml"
+
+# Smart proxy org+location
+- include_tasks: "109-smart_proxy.yml"
+
+# Compute tasks + handlers
+- include_tasks: "120-compute-resource.yml"
+- include_tasks: "121-compute-profil.yml"
+
+# OS tasks + handlers
+- include_tasks: "131-os_operatingsystems.yml"
+- include_tasks: "132-os_installation_medium.yml"
+- include_tasks: "133-os_partition_table.yml"
+- include_tasks: "134-os_provisioning_templates.yml"
+
+# Hostgroup
+
+
+# TASK TO SETUP R10K PULL GIT ON TFM-PUPPET
+# Puppet classes import must also be run after each 'r10k pull' on tfm-puppet, 
+# maybe an handler 'puppet classes import' notified by handler 'r10k pull' after task 'r10k setup' ran on tfm-puppet
+# - include_tasks: "150-puppetclasses_import.yml"
+# TASK TO SET SMART_CLASS_PARAMS AFTER HOSTGROUPS PARAMS
+# - include_tasks: "160-smart_class_parameter.yml"
+
+
+# Roles, permissions
+- include_tasks: "197-perms-roles.yml"
+- include_tasks: "198-perms-usergroup.yml"
+# - include_tasks: "198-perms-user.yml"

@@ -1,0 +1,102 @@
+---
+
+# CentOS templates
+
+- name: "Create snippet -> Kickstart default custom post"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: Kickstart default custom post
+    kind: snippet
+    template: |
+      <%#
+          name: Kickstart default custom post
+          kind: snippet
+      %>
+      yum -y install centos-release-scl
+    state: present
+  delegate_to: localhost
+
+# Assign default templates to OS CentOS
+- name: "Assign OS: CentOS all versions -> Kickstart default"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: Kickstart default
+    operatingsystems: 
+      - "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+- name: "Assign OS: Centos all versions -> Kickstart default finish"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: Kickstart default finish
+    operatingsystems: 
+      - "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+- name: "Assign OS: CentOS all versions -> Kickstart default PXELinux"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: Kickstart default PXELinux
+    operatingsystems: 
+      - "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+#- name: "Assign OS: CentOS all versions -> Global Registration"
+#  theforeman.foreman.provisioning_template:
+#    username: "{{ foreman_admin_username }}"
+#    password: "{{ foreman_admin_password }}"
+#    server_url: "{{ foreman_url_app }}"
+#    validate_certs: false
+#    name: Global Registration
+#    operatingsystems: 
+#      - "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+#    state: present
+#  loop: "{{ foreman_operatingsystems }}"
+#  when: "'CentOS' in item.name"
+#  delegate_to: localhost
+
+#- name: "Assign OS: CentOS all versions -> Linux registration default"
+#  theforeman.foreman.provisioning_template:
+#    username: "{{ foreman_admin_username }}"
+#    password: "{{ foreman_admin_password }}"
+#    server_url: "{{ foreman_url_app }}"
+#    validate_certs: false
+#    name: Linux registration default
+#    operatingsystems: 
+#      - "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+#    state: present
+#  loop: "{{ foreman_operatingsystems }}"
+#  when: "'CentOS' in item.name"
+#  delegate_to: localhost
+
+# Trigger handlers to assign OS default templates
+
+- name: "trigger OS Assign Provisioning templates"
+  ansible.builtin.command: echo "this task will trigger an handler"
+  notify: 
+    - "Assign Provisioning templates to OS CentOS" 
+    - "Set CentOS default Provisioning templates to OS provision"
+    - "Set CentOS default Provisioning templates to OS finish"
+    - "Set CentOS default Provisioning templates to OS PXELinux"
+  delegate_to: localhost

@@ -1,0 +1,23 @@
+---
+
+- name: Setting 1st smart_proxy organization+location
+  theforeman.foreman.smart_proxy:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    url: "{{ item.url }}"
+    locations: "{{ item.locations }}"
+    organizations: "{{ item.organizations }}"
+    state: present
+  loop: "{{ foreman_smart_proxy }}"
+  delegate_to: localhost
+
+# Trigger handlers to assign smart-proxy to subnets
+
+# - name: "trigger assign smart-proxy to subnets"
+#   ansible.builtin.command: echo "this task will trigger an handler"
+#   notify: 
+#     - "Assign Provisioning templates to OS CentOS" 
+#   delegate_to: localhost

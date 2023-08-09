@@ -1,0 +1,16 @@
+---
+
+- name: Set roles
+  theforeman.foreman.role:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    description: "{{ item.description | d(omit) }}"
+    filters: "{{ item.filters | d(omit) }}"
+    state: "{{ item.state }}"
+    locations: "{{ item.locations | d(omit) }}"
+    organizations: "{{ item.organizations | d(omit) }}"
+  loop: "{{ foreman_roles }}"
+  delegate_to: localhost

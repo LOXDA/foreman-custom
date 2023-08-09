@@ -1,0 +1,16 @@
+---
+
+- name: Create OS installation medium
+  theforeman.foreman.installation_medium:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    locations: "{{ item.locations }}"
+    organizations: "{{ item.organizations }}"
+    operatingsystems: "{{ item.operatingsystems }}"
+    path: "{{ item.path }}"
+    state: present
+  loop: "{{ foreman_installation_medium }}"
+  delegate_to: localhost

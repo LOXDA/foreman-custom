@@ -1,0 +1,59 @@
+---
+
+# ESXi templates
+
+- name: "Create a Provisioning Template from a file"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    file_name: "{{ role_path }}/files/{{ item.file_name }}"
+    name: "{{ item.name }}"
+    kind: "{{ item.kind }}"
+    state: "{{ item.state }}"
+    locations: "{{ item.locations }}"
+    organizations: "{{ item.organizations }}"
+  loop: "{{ foreman_provisioning_template }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+
+# Assign default templates to OS ESXi
+
+- name: "Assign OS: ESXi all versions -> ESXi iPXE Common"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: ESXi iPXE Common
+    operatingsystems: 
+      - "{{ item.name }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+
+- name: "Assign OS: ESXi all versions -> ESXi Minimal kickstart"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: ESXi Minimal Kickstart
+    operatingsystems: 
+      - "{{ item.name }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+  
+# Trigger handlers to assign OS default templates
+
+- name: "trigger OS Assign Provisioning templates"
+  ansible.builtin.command: echo "this task will trigger an handler"
+  notify: 
+    - "Assign Provisioning templates to OS ESXi"
+    - "Set ESXi default Provisioning templates to OS provision"
+    - "Set ESXi default Provisioning templates to OS iPXE"
+  delegate_to: localhost

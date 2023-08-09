@@ -1,0 +1,10 @@
+---
+
+- name: Import Puppet Classes
+  theforeman.foreman.puppetclasses_import:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    smart_proxy: "{{ foreman_url_proxy }}"
+  delegate_to: localhost

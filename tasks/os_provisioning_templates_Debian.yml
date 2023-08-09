@@ -1,0 +1,136 @@
+---
+
+# Debian templates
+
+- name: "Create a Provisioning Template from a file"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    file_name: "{{ role_path }}/files/{{ item.file_name }}"
+    name: "{{ item.name }}"
+    updated_name: "{{ item.name }}"
+    kind: "{{ item.kind }}"
+    state: "{{ item.state }}"
+    locations: "{{ item.locations }}"
+    organizations: "{{ item.organizations }}"
+  loop: "{{ foreman_provisioning_template }}"
+  when: "('Preseed' in item.name) or ('preseed' in item.name)"
+  delegate_to: localhost
+
+# - name: "Create a Provisioning Template from a file"
+#   theforeman.foreman.provisioning_template:
+#     <<: *auth
+#     file_name: "{{ role_path }}/files/template_prov_preseed_default_finish_clone"
+#     name: Preseed default finish clone
+#     kind: finish
+#     state: present
+#     locations:
+#       - "LAB"
+#     organizations:
+#       - "MGMT"
+#       - "LAB"
+
+# - name: "Create a Provisioning Template from a file"
+#   theforeman.foreman.provisioning_template:
+#     <<: *auth
+#     file_name: "{{ role_path }}/files/template_snippet_preseed_networking_setup_clone"
+#     name: preseed_networking_setup_clone
+#     kind: snippet
+#     state: present
+#     locations:
+#       - "LAB"
+#     organizations:
+#       - "MGMT"
+#       - "LAB"
+
+# - name: "Create a Provisioning Template from a file"
+#   theforeman.foreman.provisioning_template:
+#     <<: *auth
+#     file_name: "{{ role_path }}/files/template_snippet_puppet_setup_clone"
+#     name: puppet_setup_clone
+#     kind: snippet
+#     state: present
+#     locations:
+#       - "LAB"
+#     organizations:
+#       - "MGMT"
+#       - "LAB"
+
+# Assign default templates to OS Debian
+
+- name: "Assign OS: Debian all versions -> Preseed default"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: Preseed default
+    operatingsystems: 
+      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+- name: "Assign OS: Debian all versions -> Preseed default finish"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: Preseed default finish
+    operatingsystems: 
+      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+- name: "Assign OS: Debian all versions -> Preseed default PXELinux"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: Preseed default PXELinux
+    operatingsystems: 
+      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+#- name: "Assign OS: Debian all versions -> Global Registration"
+#  theforeman.foreman.provisioning_template:
+#    <<: *auth
+#    name: Global Registration
+#    operatingsystems: 
+#      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+#    state: present
+#  loop: "{{ foreman_operatingsystems }}"
+#  when: "'Debian' in item.name"
+#  delegate_to: localhost
+
+#- name: "Assign OS: Debian all versions -> Linux registration default"
+#  theforeman.foreman.provisioning_template:
+#    <<: *auth
+#    name: Linux registration default
+#    operatingsystems: 
+#      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+#    state: present
+#  loop: "{{ foreman_operatingsystems }}"
+#  when: "'Debian' in item.name"
+#  delegate_to: localhost
+
+# Trigger handlers to assign OS default templates
+
+- name: "trigger OS Assign Provisioning templates"
+  ansible.builtin.command: echo "this task will trigger an handler"
+  notify: 
+    - "Assign Provisioning templates to OS Debian"
+    - "Set Debian default Provisioning templates to OS provision"
+    - "Set Debian default Provisioning templates to OS finish"
+    - "Set Debian default Provisioning templates to OS PXELinux"
+  delegate_to: localhost

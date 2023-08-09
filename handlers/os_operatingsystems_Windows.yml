@@ -1,0 +1,101 @@
+---
+# handlers file for foreman-custom
+
+# Windows available prov templates
+- name: Assign Provisioning templates to OS Windows
+  theforeman.foreman.operatingsystem:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor }}"
+    family: "{{ item.family }}"
+    provisioning_templates:
+      - PXELinux chain iPXE
+      - Windows default iPXE httpboot imgfree
+      - Windows default provision
+      - Windows peSetup.cmd noproxy
+      - Windows default finish FR
+    media: 
+      - Windows images
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : finish
+- name: Set Windows default Provisioning templates to OS finish
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "finish"
+    provisioning_template: "Windows default finish FR"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : provision
+- name: Set Windows default Provisioning templates to OS provision
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "provision"
+    provisioning_template: "Windows default provision"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : PXELinux
+- name: Set Windows default Provisioning templates to OS PXELinux
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "PXELinux"
+    provisioning_template: "PXELinux chain iPXE"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : iPXE
+- name: Set Windows default Provisioning templates to OS iPXE
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "iPXE"
+    provisioning_template: "Windows default iPXE httpboot imgfree"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : script
+- name: Set Windows default Provisioning templates to OS script
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "script"
+    provisioning_template: "Windows peSetup.cmd noproxy"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost

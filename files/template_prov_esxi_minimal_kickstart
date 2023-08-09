@@ -1,0 +1,16 @@
+vmaccepteula
+keyboard 'US Default'
+reboot
+rootpw --iscrypted <%= root_pass %>
+install --firstdisk --overwritevmfs --novmfsondisk
+
+# Set the network to DHCP on the first network adapter
+network --bootproto=dhcp --device=<%= @host.mac %>
+
+%post --interpreter=busybox
+# Add temporary DNS resolution so the foreman call works
+echo "nameserver <%= @host.subnet.dns_primary %>" >> /etc/resolv.conf
+
+# Inform Foreman that we are done.
+wget -O /dev/null <%= foreman_url('built') %>
+echo "Done with Foreman call"

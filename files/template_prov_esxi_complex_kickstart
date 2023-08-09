@@ -1,0 +1,467 @@
+<%#
+kind: provision
+name: ESXi 6.0 (Provision)
+oses:
+- ESXi 6.0
+%>
+
+# Accept the VMware End User License Agreement.
+vmaccepteula
+keyboard 'French'
+
+#vmserialnum --esx=JV425-4H100-VZHH8-Q23NP-3A9PP
+
+<%if @host.params['esx_license_key'] %>
+vmserialnum --esx=<%= @host.params['esx_license_key'] %>
+<%end%>
+
+# Set the root password for the DCUI and Tech Support Mode.
+# Make sure to use a supported hash function, like SHA512.
+rootpw --iscrypted <%= root_pass %>
+
+# Install on first disk.
+install --firstdisk --overwritevmfs
+
+# Set the network to DHCP on the first network adapter.
+#network --bootproto=dhcp --device=<%= @host.mac %>
+
+#network configuration
+network --bootproto=static --device=vmnic0 --ip=<%= @host.ip %> --gateway=<%= @host.subnet.gateway %> --nameserver=<%= @host.subnet.dns_primary %> --netmask=<%= @host.subnet.mask %> --hostname=<%= @host.name %> --addvmportgroup=0 --vlanid=0
+
+# +---------------------------------------------------------------------------+
+# | Reboot after installation
+# +---------------------------------------------------------------------------+
+reboot --noeject
+# +---------------------------------------------------------------------------+
+# | Specifies script to run before the kickstart configuration is evaluated
+# +---------------------------------------------------------------------------+
+%pre --interpreter=busybox
+# +---------------------------------------------------------------------------+
+# | Specifies script to run after ESXi is installed and before reboot
+# +---------------------------------------------------------------------------+
+%post --interpreter=busybox --ignorefailure=true
+
+# Disable IPv6 for VMkernel interfaces
+esxcli system module parameters set -m tcpip3 -p ipv6=0
+
+#Disable ipv6
+esxcli network ip set --ipv6-enabled=0
+
+# enter maintenance mode
+esxcli system maintenanceMode set -e true
+
+# copy SSH authorized keys & overwrite existing
+#wget "https://foreman_URL/id_rsa_foreman_proxy.pub" -O /etc/ssh/keys-root/authorized_keys
+wget http://tfm-proxy.loxda.net:8000/ssh/pubkey -O /etc/ssh/keys-root/authorized_keys
+
+# register with vcenter.py
+#esxcli network firewall ruleset set -e true -r httpClient
+#wget -O vcenter.py https://foreman_URL/vcenter.py 
+#/bin/python vcenter.py
+
+# Inform the build system that we are done.
+# This should be done in the firstboot script. But
+# that isn't supported by Foreman at the moment.
+
+# Fix DNS.
+echo "nameserver <%= @host.subnet.dns_primary %>" > /etc/resolv.conf
+echo "nameserver <%= @host.subnet.dns_secondary %>" >> /etc/resolv.conf
+
+# Inform Foreman that we are done.
+wget -O /dev/null <%= foreman_url('built') %>
+echo "Done with Foreman call"
+
+# +---------------------------------------------------------------------------+
+# | Specifies script to run after ESXi installation and after first reboot
+# | Most of the shell command will enabled after the first reboot
+# +---------------------------------------------------------------------------+
+%firstboot --interpreter=busybox
+
+##--------------------------------------------------------------------------
+##  Create SSH Banner
+##--------------------------------------------------------------------------
+/bin/cat > /etc/banner.new <<SSHEOF
+${INDENTATION:-}LAB DEPLOY
+${INDENTATION:-}ESXi 6.x
+${INDENTATION:-}=========================================
+${INDENTATION:-}WARNING: UNAUTHORIZED USE IS PROHIBITED
+${INDENTATION:-}-----------------------------------------
+${INDENTATION:-}Property of LAB, and should only
+${INDENTATION:-}be accessed by authorized LAB employees.
+${INDENTATION:-}Do not attempt to login unless you are an
+${INDENTATION:-}authorized user.
+${INDENTATION:-}Any authorized or unauthorized access and use,
+${INDENTATION:-}will be monitored and anyone using this system
+${INDENTATION:-}expressly consents to such monitoring. If such
+${INDENTATION:-}monitoring reveals possible envidence of criminal
+${INDENTATION:-}activity, such evidence will be provided to law
+${INDENTATION:-}enforcement personnel and can result in criminal
+${INDENTATION:-}or civil prosecution.
+${INDENTATION:-}-----------------------------------------
+SSHEOF
+
+# +---------------------------------------------------------------------------+
+# copy new banner file to overwrite /etc/issue
+# +---------------------------------------------------------------------------+
+cp /etc/banner.new /etc/issue
+
+# enable & start remote ESXi Shell (SSH)
+#vim-cmd hostsvc/enable_ssh
+#vim-cmd hostsvc/start_ssh
+ 
+# enable & start ESXi Shell (TSM)
+#vim-cmd hostsvc/enable_esx_shell
+#vim-cmd hostsvc/start_esx_shell
+
+# enable High Performance
+# http://www.virtuallyghetto.com/2012/08/configuring-esxi-power-management.html
+esxcli system settings advanced set --option=/Power/CpuPolicy --string-value="High Performance" 
+
+# enable VHV (Virtual Hardware Virtualization to run nested 64bit Guests + Hyper-V VM)
+#grep -i "vhv.allow" /etc/vmware/config || echo "vhv.allow = \"TRUE\"" >> /etc/vmware/config
+#grep -i "vhv.enable" /etc/vmware/config || echo "vhv.enable = \"TRUE\"" >> /etc/vmware/config
+grep -i "vmx.allowNested" /etc/vmware/config || echo "vmx.allowNested = \"TRUE\"" >> /etc/vmware/config
+
+# enable & start remote ESXi Shell (SSH)
+#vim-cmd hostsvc/enable_ssh
+#vim-cmd hostsvc/start_ssh
+
+# enable & start ESXi Shell (TSM)
+#vim-cmd hostsvc/enable_esx_shell
+#vim-cmd hostsvc/start_esx_shell
+
+# supress ESXi Shell shell warning
+#esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
+
+# ESXi Shell interactive idle time logout
+esxcli system settings advanced set -o /UserVars/ESXiShellInteractiveTimeOut -i 3600
+
+# Disable IPv6 for VMkernel interfaces
+esxcli system module parameters set -m tcpip3 -p ipv6=0
+
+#Disable ipv6
+esxcli network ip set --ipv6-enabled=0
+
+### SYSLOG CONFIGURATION ###
+#esxcli system syslog config set --default-rotate 11 --loghost 'tcp://172.16.202.3:1514'
+esxcli system syslog config set --loghost='tcp://172.16.202.3:1514'
+esxcli system syslog mark --message="syslog loghost configured !"
+
+# change the individual syslog rotation count
+esxcli system syslog config logger set --id=hostd --rotate=8 --size=2048
+esxcli system syslog config logger set --id=vmkernel --rotate=8 --size=2048
+esxcli system syslog config logger set --id=fdm --rotate=8
+esxcli system syslog config logger set --id=vpxa --rotate=8
+
+# rename local datastore to something more meaningful
+vim-cmd hostsvc/datastore/rename datastore1 "local"
+
+# Needed for configuration changes that could not be performed in esxcli
+esxcfg-advcfg -k none gdbPort
+esxcfg-advcfg -k none logPort
+esxcfg-advcfg -k com1 tty2Port
+
+# Mgmt
+
+# vSwitch0 (vmnic0 + vmnic1, mtu 8750)
+# create vSwitch0 already done by installer
+#esxcli network vswitch standard add --ports 2 --vswitch-name vSwitch0
+# setting MTU Jumbo and CDP to vSwitch0
+esxcli network vswitch standard set --mtu 1500 --cdp-status listen --vswitch-name vSwitch0
+# attach vmnic1,vmnic2 to vSwitch0
+esxcli network vswitch standard uplink add --uplink-name vmnic0 --vswitch-name vSwitch0
+esxcli network vswitch standard uplink add --uplink-name vmnic1 --vswitch-name vSwitch0
+### SECURITY CONFIGURATION ###
+esxcli network vswitch standard policy security set --allow-forged-transmits yes --allow-mac-change no --allow-promiscuous no --vswitch-name vSwitch0
+# configure failure detection + load balancing (could have appended to previous line)
+esxcli network vswitch standard policy failover set --active-uplinks vmnic0,vmnic1 --vswitch-name vSwitch0
+esxcli network vswitch standard policy failover set --failback yes --failure-detection link --load-balancing mac --notify-switches yes --vswitch-name vSwitch0
+esxcli network vswitch standard portgroup add --portgroup-name "MGMT-VM" --vswitch-name vSwitch0
+esxcli network vswitch standard portgroup set --portgroup-name "MGMT-VM" --vlan-id 0
+esxcli network vswitch standard portgroup add --portgroup-name "VMOTION" --vswitch-name vSwitch0
+esxcli network vswitch standard portgroup set --portgroup-name "VMOTION" --vlan-id 0
+esxcli network vswitch standard portgroup policy failover set --portgroup-name "Management Network" -a vmnic0
+esxcli network vswitch standard portgroup policy failover set --portgroup-name "MGMT-VM" -a vmnic0
+esxcli network vswitch standard portgroup policy failover set --portgroup-name "VMOTION" -a vmnic1
+
+
+# Iscsi software initiator
+
+# vSwitch1 (vmnic2 + vmnic3)
+# create vSwitch1 
+esxcli network vswitch standard add --ports 2 --vswitch-name vSwitch1
+# setting MTU Jumbo and CDP to vSwitch1
+esxcli network vswitch standard set --mtu 1500 --cdp-status both --vswitch-name vSwitch1
+# attach vmnic2,vmnic3 to vSwitch1
+esxcli network vswitch standard uplink add --uplink-name vmnic2 --vswitch-name vSwitch1
+esxcli network vswitch standard uplink add --uplink-name vmnic3 --vswitch-name vSwitch1
+### SECURITY CONFIGURATION ###
+esxcli network vswitch standard policy security set --allow-forged-transmits yes --allow-mac-change no --allow-promiscuous no --vswitch-name vSwitch1
+# configure failure detection + load balancing (could have appended to previous line)
+#esxcli network vswitch standard policy failover set --active-uplinks vmnic2,vmnic3 --vswitch-name vSwitch1
+esxcli network vswitch standard policy failover set --failback yes --failure-detection link --load-balancing mac --notify-switches yes --vswitch-name vSwitch1
+#create portgroup
+esxcli network vswitch standard portgroup add --portgroup-name ISCSI-FA --vswitch-name vSwitch1
+esxcli network vswitch standard portgroup set --portgroup-name ISCSI-FA --vlan-id 0
+## Set manual override fail-over policy so each iSCSI VMkernel portgroup had one active physical vmnic
+esxcli network vswitch standard portgroup policy failover set --portgroup-name ISCSI-FA -a vmnic2
+#create portgroup
+esxcli network vswitch standard portgroup add --portgroup-name ISCSI-FB --vswitch-name vSwitch1
+esxcli network vswitch standard portgroup set --portgroup-name ISCSI-FB --vlan-id 0
+## Set manual override fail-over policy so each iSCSI VMkernel portgroup had one active physical vmnic
+esxcli network vswitch standard portgroup policy failover set --portgroup-name ISCSI-FB -a vmnic3
+
+
+# vSwitch2 (vmnic4 + vmnic5)
+# create vSwitch2 
+esxcli network vswitch standard add --ports 32 --vswitch-name vSwitch2
+# setting MTU Jumbo and CDP to vSwitch2
+esxcli network vswitch standard set --mtu 1500 --cdp-status both --vswitch-name vSwitch2
+# attach vmnic2,vmnic3 to vSwitch1
+esxcli network vswitch standard uplink add --uplink-name vmnic4 --vswitch-name vSwitch2
+esxcli network vswitch standard uplink add --uplink-name vmnic5 --vswitch-name vSwitch2
+### SECURITY CONFIGURATION ###
+esxcli network vswitch standard policy security set --allow-forged-transmits yes --allow-mac-change no --allow-promiscuous no --vswitch-name vSwitch2
+#esxcli network vswitch standard policy failover set --active-uplinks vmnic2,vmnic3 --vswitch-name vSwitch2
+# configure failure detection + load balancing (could have appended to previous line)
+esxcli network vswitch standard policy failover set --failback yes --failure-detection link --load-balancing mac --notify-switches yes --vswitch-name vSwitch2
+#create portgroup
+esxcli network vswitch standard portgroup add --portgroup-name LAB_INT --vswitch-name vSwitch2
+esxcli network vswitch standard portgroup set --portgroup-name LAB_INT --vlan-id 0
+## Set manual override fail-over policy so each iSCSI VMkernel portgroup had one active physical vmnic
+esxcli network vswitch standard portgroup policy failover set --portgroup-name LAB_INT -a vmnic4
+#create portgroup
+esxcli network vswitch standard portgroup add --portgroup-name LAB_EXT --vswitch-name vSwitch2
+esxcli network vswitch standard portgroup set --portgroup-name LAB_EXT --vlan-id 0
+## Set manual override fail-over policy so each iSCSI VMkernel portgroup had one active physical vmnic
+esxcli network vswitch standard portgroup policy failover set --portgroup-name LAB_EXT -a vmnic5
+
+
+## SATP CONFIGURATIONS ##
+esxcli storage nmp satp set --satp VMW_SATP_SYMM --default-psp VMW_PSP_RR
+esxcli storage nmp satp set --satp VMW_SATP_DEFAULT_AA --default-psp VMW_PSP_RR
+
+ 
+# configure vmkernel interface for NFS traffic, FT_VMOTION and VSPHERE_REPLICATION traffic
+VMK0_IPADDR=$(esxcli network ip interface ipv4 get | grep vmk0 | awk '{print $2}')
+VMK1_IPADDR=$(echo ${VMK0_IPADDR} | awk '{print $1"."$2".203."$4}' FS=.)
+VMK2_IPADDR=$(echo ${VMK0_IPADDR} | awk '{print $1"."$2".211."$4}' FS=.)
+VMK3_IPADDR=$(echo ${VMK0_IPADDR} | awk '{print $1"."$2".212."$4}' FS=.)
+esxcli network ip interface add --interface-name vmk1 --mtu 1500 --portgroup-name VMOTION
+esxcli network ip interface ipv4 set --interface-name vmk1 --ipv4 ${VMK1_IPADDR} --netmask 255.255.255.0 --type static
+esxcli network ip interface add --interface-name vmk2 --mtu 1500 --portgroup-name ISCSI-FA
+esxcli network ip interface ipv4 set --interface-name vmk2 --ipv4 ${VMK2_IPADDR} --netmask 255.255.255.0 --type static
+esxcli network ip interface add --interface-name vmk3 --mtu 1500 --portgroup-name ISCSI-FB
+esxcli network ip interface ipv4 set --interface-name vmk3 --ipv4 ${VMK3_IPADDR} --netmask 255.255.255.0 --type static
+ 
+# Configure VMkernel traffic type (Management, VMotion, faultToleranceLogging, vSphereReplication)
+esxcli network ip interface tag add -i vmk0 -t Management
+#esxcli network ip interface tag add -i vmk1 -t Management
+esxcli network ip interface tag add -i vmk1 -t VMotion
+#esxcli network ip interface tag add -i vmk2 -t faultToleranceLogging
+#esxcli network ip interface tag add -i vmk3 -t vSphereReplication
+
+#logger $vsan_syslog_key "Enabling VSAN Traffic on vmk4"
+#esxcli vsan network ipv4 add -i vmk4
+
+# Configure VMkernel routes
+#esxcli network ip route ipv4 add -n 10.20.183/24 -g 172.30.0.1
+#esxcli network ip route ipv4 add -n 10.20.182/24 -g 172.30.0.1
+esxcli network ip route ipv4 add -n 172.16.0.0/24 -g 172.16.202.254
+
+/usr/bin/vim-cmd internalsvc/refresh_network                                                                                        
+
+# ISCSI CONFIGURATION
+
+esxcli iscsi software set -e true
+VMHBA_ISCSI=`esxcli iscsi adapter list | grep Software | awk '{print $1;}'`
+HOSTNAME=<%=@host.name%>
+esxcli iscsi adapter set -A $VMHBA_ISCSI --name iqn.2020-01.lab.infra:$HOSTNAME
+
+esxcli iscsi networkportal add -A $VMHBA_ISCSI -n vmk2
+/usr/bin/vim-cmd internalsvc/refresh_network
+esxcli iscsi networkportal add -A $VMHBA_ISCSI -n vmk3
+/usr/bin/vim-cmd internalsvc/refresh_network
+
+## Setting iscsi Static Target (Group IP Adresse)
+#esxcli iscsi adapter discovery statictarget add --address=${ip1_san1}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip2_san1}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip3_san1}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip4_san1}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip4_san1}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip5_san1}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip6_san1}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip7_san1}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip8_san1}:${port_san} --adapter=$VMHBA_ISCSI
+
+#esxcli iscsi adapter discovery statictarget add --address=${ip1_san2}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip2_san2}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip3_san2}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip4_san2}:${port_san} --adapter=$VMHBA_ISCSI
+
+#esxcli iscsi adapter discovery statictarget add --address=${ip1_san3}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip2_san3}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip3_san3}:${port_san} --adapter=$VMHBA_ISCSI
+#esxcli iscsi adapter discovery statictarget add --address=${ip4_san3}:${port_san} --adapter=$VMHBA_ISCSI
+
+## Setting CHAP iscsi
+# boucle ERB sur le host_params[iscsi_sanX_chap] array a definir
+#esxcli iscsi adapter discovery sendtarget auth chap set --adapter=$$VMHBA_ISCSI --address=${ip?_san1} -l required -N ${chap_user} -S ${chap_password}
+#esxcli iscsi adapter discovery sendtarget auth chap set --adapter=$$VMHBA_ISCSI --address=${ip?_san2} -l required -N ${chap_user} -S ${chap_password}
+#esxcli iscsi adapter discovery sendtarget auth chap set --adapter=$$VMHBA_ISCSI --address=${ip?_san3} -l required -N ${chap_user} -S ${chap_password}
+
+## Perform rediscovery and rescan all storage devices
+esxcli iscsi adapter discovery rediscover
+esxcli storage core adapter rescan --adapter ${vmhba}
+
+# +---------------------------------------------------------------------------+
+# | Disabling Delayed ACK
+# | To disable delayed_ack = 0
+# | To enable delayed_ack = 1
+# +---------------------------------------------------------------------------+
+VMHBA_ISCSI=$(esxcli iscsi adapter list | grep -i iscsi_vmk | cut -d ' ' -f 1)
+vmkiscsi-tool -W -a delayed_ack=0 -j $VMHBA_ISCSI
+#vmkiscsi-tool -W -a delayed_ack=1 -j $VMHBA_ISCSI
+
+#Check parameters
+#vmkiscsi-tool -W $VMHBA_ISCSI
+
+# +---------------------------------------------------------------------------+
+# | Disabling Large receive offload (LRO)
+# | LRO works in a similar way to Delayed ACK, by aggregating packets into a buffer before the received data is sent to the TCP stack. 
+# | With iSCSI storage this inserts latency into the process, potentially reducing performance
+# | LRO value 0 (disabled) / LRO value 1 (enable) 
+# | server reboot is required
+# +---------------------------------------------------------------------------+ 
+#esxcfg-advcfg -s 0 /Net/TcpipDefLROEnabled
+#esxcli system settings advanced set -o /Net/UseHwTSO -i 1
+esxcli system settings advanced set -o /Net/UseHwTSO -i 0
+
+# VSAN CONFIGURATION
+# 'stor_vsan_enabled' boolean to enable VSAN on this host, only prepare disk reclaim
+# 'stor_vsan_diskcache_size' in Gb, like 20, if set also find and reclaim cache disk and include in diskgroup
+# 'stor_vsan_diskcapacity_size' in Gb, like 180
+
+<%if @host.params['stor_vsan_enabled'] %>
+
+  esxcli vsan network ipv4 add -i vmk1
+  esxcli vsan network ip add -i vmk0 -T=witness
+
+  #/sbin/vdq -q
+  <%if @host.params['stor_vsan_diskcache_size'] %>
+    VSAN_DISKCACHE=$(esxcli storage core device capacity list | grep `expr <%=@host.params['stor_vsan_diskcache_size']%> \* 1024`\ MiB | awk '{print $1}')
+  <%end%>
+  <%if @host.params['stor_vsan_diskcache_size'] %>
+    # Mark vSAN cache disk as Flash disk
+    esxcli storage nmp satp rule add -s VMW_SATP_LOCAL -o enable_ssd -d "${VSAN_DISKCACHE}"
+    # Reclaim vSAN Flash disk
+    logger $vsan_syslog_key "Reclaiming vSAN disk SSD for cache"
+    esxcli storage core claiming reclaim -d "${VSAN_DISKCACHE}"
+  <%end%>
+
+  <%if @host.params['stor_vsan_diskcapacity_size'] %>
+    VSAN_DISKSTORAGE=$(esxcli storage core device capacity list | grep `expr <%=@host.params['stor_vsan_diskcapacity_size']%> \* 1024`\ MiB | awk '{print $1}')
+  <%end%>
+  <%if @host.params['stor_vsan_diskcapacity_size'] %>
+  # Mark vSAN capacity disk as Hard Disk Drive (i.e. NOT Flash) in case storage on physical host is Flash/SSD.  Required to ensure auto-claiming of drives for vSAN is handled properly.
+  esxcli storage nmp satp rule add -s VMW_SATP_LOCAL -o disable_ssd -d "${VSAN_DISKSTORAGE}"
+  # Reclaim vSAN capacity disk
+  logger $vsan_syslog_key "Reclaiming vSAN disk SSD for cache"
+  esxcli storage core claiming reclaim -d "${VSAN_DISKSTORAGE}"
+
+  <%if @host.params['stor_vsan_diskcapacity_size'] %>
+    <%if @host.params['stor_vsan_diskcache_size'] %>
+      # Create vSAN diskgroup
+      esxcli vsan storage add -s "${VSAN_DISKCACHE}" -d "${VSAN_DISKSTORAGE}"
+    <% elsif %>
+      esxcli vsan storage add -d "${VSAN_DISKSTORAGE}"
+    <% end %>
+  <% end %>
+
+  <%if @host.params['stor_vsan_firstnode'] %>
+    esxcli vsan cluster new
+  <% elseif %>
+    esxcli vsan cluster join -u 5228968a-3aaf-d11b-d107-ec028c18b3ff
+  <%end%>
+
+  #esxcli vsan health cluster list -w
+<%end%>
+
+# NFS CONFIGURATION
+
+esxcli system settings advanced set --option /Net/TcpipHeapSize --int-value 30
+esxcli system settings advanced set --option /Net/TcpipHeapMax --int-value 120
+esxcli system settings advanced set --option /NFS/HeartbeatMaxFailures --int-value 10
+esxcli system settings advanced set --option /NFS/HeartbeatFrequency --int-value 20
+esxcli system settings advanced set --option /NFS/HeartbeatTimeout --int-value 10
+esxcli system settings advanced set --option /NFS/MaxVolumes --int-value 128
+ 
+# copy %first boot script logs to persisted datastore
+cp /var/log/hostd.log "/vmfs/volumes/local/firstboot-hostd.log"
+cp /var/log/esxi_install.log "/vmfs/volumes/local/firstboot-esxi_install.log"
+
+# Add NFS datastore during deployement
+esxcli storage nfs add --host=172.16.203.12 --share=/zfs/nfslab4 --volume-name=nfslab4
+
+### Disable CEIP
+esxcli system settings advanced set -o /UserVars/HostClientCEIPOptIn -i 2
+
+### NTP CONFIGURATIONS ###
+cat > /etc/ntp.conf << __NTP_CONFIG__
+restrict default kod nomodify notrap noquery nopeer
+restrict 127.0.0.1
+server 0.fr.pool.ntp.org
+server 1.fr.pool.ntp.org
+__NTP_CONFIG__
+/sbin/chkconfig ntpd on
+
+### FIREWALL CONFIGURATION ###
+# enable firewall
+#esxcli network firewall set --default-action false --enabled yes
+
+_lan="172.16.0.0/16"
+_whitelist="172.16.202.10/32 172.16.202.32/32 172.16.202.29/32"
+
+# Default block
+#esxcli network firewall set -d false
+#for _service in $(esxcli network firewall ruleset allowedip list | awk 'NR>=3 { print $1 }'); do
+#  esxcli network firewall ruleset set --allowed-all false --ruleset-id=$_service
+#done
+
+# Allow outgoing to ANY
+esxcli network firewall ruleset set --allowed-all true --ruleset-id=dns
+esxcli network firewall ruleset set --allowed-all true --ruleset-id=esxupdate
+esxcli network firewall ruleset set --allowed-all true --ruleset-id=httpClient
+esxcli network firewall ruleset set --allowed-all true --ruleset-id=ntpClient
+esxcli network firewall ruleset set --allowed-all true --ruleset-id=nfsClient
+esxcli network firewall ruleset set --allowed-all true --ruleset-id=nfs41Client
+
+# Allow outgoing to LAN
+for _ip in $lan; do
+  esxcli network firewall ruleset allowedip add -i=$_ip -r=syslog
+done
+
+# Allow incoming from LAN
+for _ip in $_lan; do
+  esxcli network firewall ruleset allowedip add -i=$_ip -r=snmp
+  esxcli network firewall ruleset allowedip add -i=$_ip -r=sshServer
+  esxcli network firewall ruleset allowedip add -i=$_ip -r=webAccess
+  esxcli network firewall ruleset allowedip add -i=$_ip -r=vSphereClient
+done
+
+# Allow incoming from WHITELIST
+for _ip in $_whitelist; do
+  esxcli network firewall ruleset allowedip add -i=$_ip -r=sshServer
+  esxcli network firewall ruleset allowedip add -i=$_ip -r=webAccess
+  esxcli network firewall ruleset allowedip add -i=$_ip -r=vSphereClient
+done
+
+/usr/bin/vim-cmd internalsvc/refresh_network
+
+# enter maintenance mode
+#esxcli system maintenanceMode set -e true
+
+# Needed for configuration changes that could not be performed in esxcli
+esxcli system shutdown reboot -d 1 -r "rebooting after host configurations"
+
+exit 0

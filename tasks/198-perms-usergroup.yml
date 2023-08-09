@@ -1,0 +1,69 @@
+---
+
+### admins
+
+- name: Create a user group - admins
+  theforeman.foreman.usergroup:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: admins
+    admin: false
+    roles:
+      - Access dashboard
+      - Env production
+      - Locations users
+      - Usergroups users
+      - Smart proxies users
+      - Compute profiles users
+      - Compute resources users vc-dc2
+      - Hostgroups admins
+      - Hosts admins
+      - Ansible admins
+    state: present
+
+- name: Create an external user group - tfm-admins
+  theforeman.foreman.external_usergroup:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: tfm-admins
+    auth_source: lab-ldap
+    usergroup: admins
+    state: present
+
+### sysadm
+
+- name: Create a user group - sysadm
+  theforeman.foreman.usergroup:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: sysadm
+    admin: false
+    roles:
+      - Access dashboard
+      - Env production
+      - Locations users
+      - Usergroups users
+      - Smart proxies users
+      - Compute profiles users
+      - Compute resources users vc-dc2
+      - Hostgroups users
+      - Hosts admins
+      - Ansible admins
+    state: present
+
+- name: Create an external user group - tfm-sysadm
+  theforeman.foreman.external_usergroup:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: tfm-sysadm
+    auth_source: lab-ldap
+    usergroup: sysadm
+    state: present

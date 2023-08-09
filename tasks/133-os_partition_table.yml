@@ -1,0 +1,28 @@
+---
+
+- name: "Assign all partition tables to organization(s)"
+  theforeman.foreman.partition_table:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "*"
+    state: present
+    organizations: "{{ item.name }}"
+  delegate_to: localhost
+  loop: "{{ foreman_organization }}"
+
+- name: "Assign all partition tables to location(s)"
+  theforeman.foreman.partition_table:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "*"
+    state: present
+    locations: "{{ foreman_location[0].name }}"
+  delegate_to: localhost
+
+- debug: 
+    msg: 
+      - "{{ foreman_location[0].name }}"

@@ -1,0 +1,13 @@
+---
+
+- name: Create compute profil
+  theforeman.foreman.compute_profile:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    compute_attributes: "{{ item.compute_attributes }}"
+    state: present
+  loop: "{{ foreman_compute_profil }}"
+  delegate_to: localhost

@@ -1,0 +1,52 @@
+---
+# handlers file for foreman-custom
+
+# ESXi available prov templates
+- name: Assign Provisioning templates to OS ESXi
+  theforeman.foreman.operatingsystem:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor }}"
+    family: "{{ item.family }}"
+    provisioning_templates:
+      - ESXi iPXE Common
+      - ESXi Complex Kickstart
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+
+# ESXi set default : iPXE
+- name: Set ESXi default Provisioning templates to OS iPXE
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }}"
+    template_kind: "iPXE"
+    provisioning_template: "ESXi iPXE Common"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+
+# ESXi set default : provision
+- name: Set ESXi default Provisioning templates to OS provision
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }}"
+    template_kind: "provision"
+    provisioning_template: "{{ item.provisioning_template }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+

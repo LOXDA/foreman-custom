@@ -1,0 +1,14 @@
+---
+
+- name: "Create Location"
+  theforeman.foreman.location:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    organizations: "{{ item.organizations }}"
+    parent: "{{ item.parent }}"
+    state: present
+  loop: "{{ foreman_location }}"
+  delegate_to: localhost
