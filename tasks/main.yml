@@ -26,7 +26,7 @@
 #   delegate_to: localhost
 
 # Auth sources
-- include_tasks: "100-auth-source.yml"
+# - include_tasks: "100-auth-source.yml"
 
 # Common stuff
 - include_tasks: "101-organization.yml"
@@ -39,7 +39,7 @@
 
 # Compute tasks + handlers
 - include_tasks: "120-compute-resource.yml"
-- include_tasks: "121-compute-profil.yml"
+# - include_tasks: "121-compute-profil.yml"
 
 # OS tasks + handlers
 - include_tasks: "131-os_operatingsystems.yml"
