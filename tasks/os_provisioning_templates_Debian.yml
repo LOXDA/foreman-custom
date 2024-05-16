@@ -59,6 +59,19 @@
 #       - "LAB"
 
 # Assign default templates to OS Debian
+- name: "Assign OS: Debian all versions -> UserData default"
+  theforeman.foreman.provisioning_template:
+    server_url: "{{ foreman_url_app }}"
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    validate_certs: false
+    name: UserData default
+    operatingsystems: 
+      - "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
 
 - name: "Assign OS: Debian all versions -> Preseed default"
   theforeman.foreman.provisioning_template:
@@ -68,7 +81,7 @@
     validate_certs: false
     name: Preseed default
     operatingsystems: 
-      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+      - "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     state: present
   loop: "{{ foreman_operatingsystems }}"
   when: "'Debian' in item.name"
@@ -82,7 +95,7 @@
     validate_certs: false
     name: Preseed default finish
     operatingsystems: 
-      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+      - "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     state: present
   loop: "{{ foreman_operatingsystems }}"
   when: "'Debian' in item.name"
@@ -96,33 +109,11 @@
     validate_certs: false
     name: Preseed default PXELinux
     operatingsystems: 
-      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+      - "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     state: present
   loop: "{{ foreman_operatingsystems }}"
   when: "'Debian' in item.name"
   delegate_to: localhost
-
-#- name: "Assign OS: Debian all versions -> Global Registration"
-#  theforeman.foreman.provisioning_template:
-#    <<: *auth
-#    name: Global Registration
-#    operatingsystems: 
-#      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
-#    state: present
-#  loop: "{{ foreman_operatingsystems }}"
-#  when: "'Debian' in item.name"
-#  delegate_to: localhost
-
-#- name: "Assign OS: Debian all versions -> Linux registration default"
-#  theforeman.foreman.provisioning_template:
-#    <<: *auth
-#    name: Linux registration default
-#    operatingsystems: 
-#      - "{{ item.name }} {{ item.major }}.{{ item.minor }}"
-#    state: present
-#  loop: "{{ foreman_operatingsystems }}"
-#  when: "'Debian' in item.name"
-#  delegate_to: localhost
 
 # Trigger handlers to assign OS default templates
 
@@ -130,6 +121,8 @@
   ansible.builtin.command: echo "this task will trigger an handler"
   notify: 
     - "Assign Provisioning templates to OS Debian"
+    # - "Set Debian default registration templates to OS registration"
+    - "Set Debian default Provisioning templates to OS user_data"
     - "Set Debian default Provisioning templates to OS provision"
     - "Set Debian default Provisioning templates to OS finish"
     - "Set Debian default Provisioning templates to OS PXELinux"

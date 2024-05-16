@@ -10,9 +10,10 @@
     validate_certs: false
     name: "{{ item.name }}"
     major: "{{ item.major }}"
-    minor: "{{ item.minor }}"
+    minor: "{{ item.minor | default(omit) }}"
     family: "{{ item.family }}"
     provisioning_templates:
+      - UserData default
       - Preseed default
       - Preseed default finish
       - Preseed default PXELinux
@@ -25,13 +26,28 @@
   delegate_to: localhost
 
 # Debian set default : finish
+- name: Set Debian default Provisioning templates to OS user_data
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
+    template_kind: "user_data"
+    provisioning_template: "UserData default"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+# Debian set default : finish
 - name: Set Debian default Provisioning templates to OS finish
   theforeman.foreman.os_default_template:
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
     server_url: "{{ foreman_url_app }}"
     validate_certs: false
-    operatingsystem: "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+    operatingsystem: "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     template_kind: "finish"
     provisioning_template: "Preseed default finish"
     state: present
@@ -46,7 +62,7 @@
     password: "{{ foreman_admin_password }}"
     server_url: "{{ foreman_url_app }}"
     validate_certs: false
-    operatingsystem: "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+    operatingsystem: "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     template_kind: "provision"
     provisioning_template: "Preseed default"
     state: present
@@ -61,7 +77,7 @@
     password: "{{ foreman_admin_password }}"
     server_url: "{{ foreman_url_app }}"
     validate_certs: false
-    operatingsystem: "{{ item.name }} {{ item.major }}.{{ item.minor }}"
+    operatingsystem: "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     template_kind: "PXELinux"
     provisioning_template: "Preseed default PXELinux FIXED"
     state: present
@@ -69,17 +85,17 @@
   when: "'Debian' in item.name"
   delegate_to: localhost
 
-# Debian set default : registration
-- name: Set Debian default registration templates to OS registration
-  theforeman.foreman.os_default_template:
-    username: "{{ foreman_admin_username }}"
-    password: "{{ foreman_admin_password }}"
-    server_url: "{{ foreman_url_app }}"
-    validate_certs: false
-    operatingsystem: "{{ item.name }} {{ item.major }}.{{ item.minor }}"
-    template_kind: "registration"
-    provisioning_template: "Linux registration default"
-    state: present
-  loop: "{{ foreman_operatingsystems }}"
-  when: "'Debian' in item.name"
-  delegate_to: localhost
+# # Debian set default : registration
+# - name: Set Debian default registration templates to OS registration
+#   theforeman.foreman.os_default_template:
+#     username: "{{ foreman_admin_username }}"
+#     password: "{{ foreman_admin_password }}"
+#     server_url: "{{ foreman_url_app }}"
+#     validate_certs: false
+#     operatingsystem: "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
+#     template_kind: "registration"
+#     provisioning_template: "Linux host_init_config default"
+#     state: present
+#   loop: "{{ foreman_operatingsystems }}"
+#   when: "'Debian' in item.name"
+#   delegate_to: localhost

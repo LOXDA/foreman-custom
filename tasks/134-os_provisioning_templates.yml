@@ -1,7 +1,7 @@
 ---
 
 # CentOS templates
-- include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_CentOS.yml
+# - include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_CentOS.yml
 
 # Debian templates
 - include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_Debian.yml

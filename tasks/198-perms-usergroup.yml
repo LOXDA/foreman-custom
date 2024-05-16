@@ -17,7 +17,7 @@
       - Usergroups users
       - Smart proxies users
       - Compute profiles users
-      - Compute resources users vc-dc2
+      - Compute resources users opn
       - Hostgroups admins
       - Hosts admins
       - Ansible admins
@@ -51,7 +51,7 @@
       - Usergroups users
       - Smart proxies users
       - Compute profiles users
-      - Compute resources users vc-dc2
+      - Compute resources users opn
       - Hostgroups users
       - Hosts admins
       - Ansible admins
