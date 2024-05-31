@@ -48,7 +48,7 @@
 - include_tasks: "134-os_provisioning_templates.yml"
 
 # Hostgroup
-
+- include_tasks: "140-hostgroup.yml"
 
 # TASK TO SETUP R10K PULL GIT ON TFM-PUPPET
 # Puppet classes import must also be run after each 'r10k pull' on tfm-puppet, 
@@ -56,7 +56,6 @@
 # - include_tasks: "150-puppetclasses_import.yml"
 # TASK TO SET SMART_CLASS_PARAMS AFTER HOSTGROUPS PARAMS
 # - include_tasks: "160-smart_class_parameter.yml"
-
 
 # Roles, permissions
 - include_tasks: "197-perms-roles.yml"

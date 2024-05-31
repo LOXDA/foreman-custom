@@ -17,7 +17,6 @@
       - Preseed default
       - Preseed default finish
       - Preseed default PXELinux
-      - Preseed default PXELinux FIXED
     media: 
       - Debian mirror
     state: present
@@ -79,7 +78,7 @@
     validate_certs: false
     operatingsystem: "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     template_kind: "PXELinux"
-    provisioning_template: "Preseed default PXELinux FIXED"
+    provisioning_template: "Preseed default PXELinux"
     state: present
   loop: "{{ foreman_operatingsystems }}"
   when: "'Debian' in item.name"
