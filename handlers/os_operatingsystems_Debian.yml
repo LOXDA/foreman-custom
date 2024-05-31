@@ -2,30 +2,30 @@
 # handlers file for foreman-custom
 
 # Debian available prov templates
-- name: Assign Provisioning templates to OS Debian
+- name: "Assign Provisioning templates to OS Debian"
   theforeman.foreman.operatingsystem:
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
     server_url: "{{ foreman_url_app }}"
     validate_certs: false
-    name: "{{ item.name }}"
-    major: "{{ item.major }}"
-    minor: "{{ item.minor | default(omit) }}"
-    family: "{{ item.family }}"
+    name: "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
+#    major: "{{ item.major }}"
+#    minor: "{{ item.minor | default(omit) }}"
+#    family: "{{ item.family }}"
     provisioning_templates:
-      - UserData default
-      - Preseed default
-      - Preseed default finish
-      - Preseed default PXELinux
-    media: 
-      - Debian mirror
+      - "UserData default"
+      - "Preseed default"
+      - "Preseed default finish"
+      - "Preseed default PXELinux"
+    media:
+      - "Debian mirror"
     state: present
   loop: "{{ foreman_operatingsystems }}"
   when: "'Debian' in item.name"
   delegate_to: localhost
 
 # Debian set default : finish
-- name: Set Debian default Provisioning templates to OS user_data
+- name: "Set Debian default Provisioning templates to OS user_data"
   theforeman.foreman.os_default_template:
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
@@ -40,7 +40,7 @@
   delegate_to: localhost
 
 # Debian set default : finish
-- name: Set Debian default Provisioning templates to OS finish
+- name: "Set Debian default Provisioning templates to OS finish"
   theforeman.foreman.os_default_template:
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
@@ -55,7 +55,7 @@
   delegate_to: localhost
 
 # Debian set default : provision
-- name: Set Debian default Provisioning templates to OS provision
+- name: "Set Debian default Provisioning templates to OS provision"
   theforeman.foreman.os_default_template:
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
@@ -70,7 +70,7 @@
   delegate_to: localhost
 
 # Debian set default : PXELinux
-- name: Set Debian default Provisioning templates to OS PXELinux
+- name: "Set Debian default Provisioning templates to OS PXELinux"
   theforeman.foreman.os_default_template:
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
@@ -83,18 +83,3 @@
   loop: "{{ foreman_operatingsystems }}"
   when: "'Debian' in item.name"
   delegate_to: localhost
-
-# # Debian set default : registration
-# - name: Set Debian default registration templates to OS registration
-#   theforeman.foreman.os_default_template:
-#     username: "{{ foreman_admin_username }}"
-#     password: "{{ foreman_admin_password }}"
-#     server_url: "{{ foreman_url_app }}"
-#     validate_certs: false
-#     operatingsystem: "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
-#     template_kind: "registration"
-#     provisioning_template: "Linux host_init_config default"
-#     state: present
-#   loop: "{{ foreman_operatingsystems }}"
-#   when: "'Debian' in item.name"
-#   delegate_to: localhost

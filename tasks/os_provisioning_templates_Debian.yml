@@ -65,7 +65,7 @@
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
     validate_certs: false
-    name: UserData default
+    name: "UserData default"
     operatingsystems: 
       - "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     state: present
@@ -79,7 +79,7 @@
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
     validate_certs: false
-    name: Preseed default
+    name: "Preseed default"
     operatingsystems: 
       - "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     state: present
@@ -93,7 +93,7 @@
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
     validate_certs: false
-    name: Preseed default finish
+    name: "Preseed default finish"
     operatingsystems: 
       - "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     state: present
@@ -107,7 +107,7 @@
     username: "{{ foreman_admin_username }}"
     password: "{{ foreman_admin_password }}"
     validate_certs: false
-    name: Preseed default PXELinux
+    name: "Preseed default PXELinux"
     operatingsystems: 
       - "{{ item.name + ' ' + item.major|string if not item.minor else item.name + ' ' + item.major|string + '.' + item.minor|string }}"
     state: present
@@ -119,11 +119,11 @@
 
 - name: "trigger OS Assign Provisioning templates"
   ansible.builtin.command: echo "this task will trigger an handler"
-  notify: 
+  notify:
     - "Assign Provisioning templates to OS Debian"
-    # - "Set Debian default registration templates to OS registration"
     - "Set Debian default Provisioning templates to OS user_data"
     - "Set Debian default Provisioning templates to OS provision"
     - "Set Debian default Provisioning templates to OS finish"
     - "Set Debian default Provisioning templates to OS PXELinux"
   delegate_to: localhost
+

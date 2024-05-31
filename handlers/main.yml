@@ -1,7 +1,7 @@
 ---
 # handlers file for foreman-custom
 
-- include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_CentOS.yml
+# - include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_CentOS.yml
 - include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_Debian.yml
-- include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_ESXi.yml
-- include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_Windows.yml
+# - include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_ESXi.yml
+# - include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_Windows.yml
