@@ -27,7 +27,7 @@
     password: "{{ foreman_admin_password }}"
     validate_certs: false
     name: ESXi iPXE Common
-    operatingsystems: 
+    operatingsystems:
       - "{{ item.name }}"
     state: present
   loop: "{{ foreman_operatingsystems }}"
@@ -41,18 +41,19 @@
     password: "{{ foreman_admin_password }}"
     validate_certs: false
     name: ESXi Minimal Kickstart
-    operatingsystems: 
+    operatingsystems:
       - "{{ item.name }}"
     state: present
   loop: "{{ foreman_operatingsystems }}"
   when: "'ESXi' in item.name"
   delegate_to: localhost
-  
+
 # Trigger handlers to assign OS default templates
 
-- name: "trigger OS Assign Provisioning templates"
-  ansible.builtin.command: echo "this task will trigger an handler"
-  notify: 
+- name: "Trigger OS Assign Provisioning templates"
+  ansible.builtin.command: /bin/true
+  changed_when: true
+  notify:
     - "Assign Provisioning templates to OS ESXi"
     - "Set ESXi default Provisioning templates to OS provision"
     - "Set ESXi default Provisioning templates to OS iPXE"

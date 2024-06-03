@@ -22,7 +22,3 @@
     state: present
     locations: "{{ foreman_location[0].name }}"
   delegate_to: localhost
-
-- debug: 
-    msg: 
-      - "{{ foreman_location[0].name }}"

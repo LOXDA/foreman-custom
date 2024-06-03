@@ -1,7 +1,322 @@
 ---
 # handlers file for foreman-custom
 
-# - include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_CentOS.yml
-- include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_Debian.yml
-# - include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_ESXi.yml
-# - include_tasks: ../roles/foreman-custom/handlers/os_operatingsystems_Windows.yml
+# - include_tasks: os_operatingsystems_CentOS.yml
+# - include_tasks: os_operatingsystems_Debian.yml
+# - include_tasks: os_operatingsystems_ESXi.yml
+# - include_tasks: os_operatingsystems_Windows.yml
+
+# MARK: DEBIAN
+# Debian available prov templates
+- name: "Assign Provisioning templates to OS Debian"
+  theforeman.foreman.operatingsystem:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor | default(omit) }}"
+    family: "{{ item.family }}"
+    provisioning_templates:
+      - "UserData default"
+      - "Preseed default"
+      - "Preseed default finish"
+      - "Preseed default PXELinux"
+    media:
+      - "Debian mirror"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+# Debian set default : finish
+- name: "Set Debian default Provisioning templates to OS user_data"
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name + ' ' + item.major | string if not item.minor else item.name + ' ' + item.major | string + '.' + item.minor | string }}"
+    template_kind: "user_data"
+    provisioning_template: "UserData default"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+# Debian set default : finish
+- name: "Set Debian default Provisioning templates to OS finish"
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name + ' ' + item.major | string if not item.minor else item.name + ' ' + item.major | string + '.' + item.minor | string }}"
+    template_kind: "finish"
+    provisioning_template: "Preseed default finish"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+# Debian set default : provision
+- name: "Set Debian default Provisioning templates to OS provision"
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name + ' ' + item.major | string if not item.minor else item.name + ' ' + item.major | string + '.' + item.minor | string }}"
+    template_kind: "provision"
+    provisioning_template: "Preseed default"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+# Debian set default : PXELinux
+- name: "Set Debian default Provisioning templates to OS PXELinux"
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name + ' ' + item.major | string if not item.minor else item.name + ' ' + item.major | string + '.' + item.minor | string }}"
+    template_kind: "PXELinux"
+    provisioning_template: "Preseed default PXELinux"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Debian' in item.name"
+  delegate_to: localhost
+
+# MARK: CENTOS
+# CentOS available prov templates
+- name: Assign Provisioning templates to OS CentOS
+  theforeman.foreman.operatingsystem:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor }}"
+    family: "{{ item.family }}"
+    provisioning_templates:
+      - Kickstart default
+      - Kickstart default finish
+      - Kickstart default PXELinux
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# CentOS set default : finish
+- name: Set CentOS default Provisioning templates to OS finish
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    template_kind: "finish"
+    provisioning_template: "Kickstart default finish"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# CentOS set default : provision
+- name: Set CentOS default Provisioning templates to OS provision
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    template_kind: "provision"
+    provisioning_template: "Kickstart default"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# CentOS set default : PXELinux
+- name: Set CentOS default Provisioning templates to OS PXELinux
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    template_kind: "PXELinux"
+    provisioning_template: "Kickstart default PXELinux"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# CentOS set default : registration
+- name: Set CentOS default registration templates to OS registration
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} Linux {{ item.major }}.{{ item.minor }}"
+    template_kind: "registration"
+    provisioning_template: "Linux registration default"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'CentOS' in item.name"
+  delegate_to: localhost
+
+# MARK: ESXi
+# ESXi available prov templates
+- name: Assign Provisioning templates to OS ESXi
+  theforeman.foreman.operatingsystem:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor }}"
+    family: "{{ item.family }}"
+    provisioning_templates:
+      - ESXi iPXE Common
+      - ESXi Complex Kickstart
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+
+# ESXi set default : iPXE
+- name: Set ESXi default Provisioning templates to OS iPXE
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }}"
+    template_kind: "iPXE"
+    provisioning_template: "ESXi iPXE Common"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+
+# ESXi set default : provision
+- name: Set ESXi default Provisioning templates to OS provision
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }}"
+    template_kind: "provision"
+    provisioning_template: "{{ item.provisioning_template }}"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'ESXi' in item.name"
+  delegate_to: localhost
+
+# MARK: WINDOWS
+# Windows available prov templates
+- name: Assign Provisioning templates to OS Windows
+  theforeman.foreman.operatingsystem:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    name: "{{ item.name }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor }}"
+    family: "{{ item.family }}"
+    provisioning_templates:
+      - PXELinux chain iPXE
+      - Windows default iPXE httpboot imgfree
+      - Windows default provision
+      - Windows peSetup.cmd noproxy
+      - Windows default finish FR
+    media:
+      - Windows images
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : finish
+- name: Set Windows default Provisioning templates to OS finish
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "finish"
+    provisioning_template: "Windows default finish FR"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : provision
+- name: Set Windows default Provisioning templates to OS provision
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "provision"
+    provisioning_template: "Windows default provision"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : PXELinux
+- name: Set Windows default Provisioning templates to OS PXELinux
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "PXELinux"
+    provisioning_template: "PXELinux chain iPXE"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : iPXE
+- name: Set Windows default Provisioning templates to OS iPXE
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "iPXE"
+    provisioning_template: "Windows default iPXE httpboot imgfree"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost
+
+# Windows set default : script
+- name: Set Windows default Provisioning templates to OS script
+  theforeman.foreman.os_default_template:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "{{ foreman_url_app }}"
+    validate_certs: false
+    operatingsystem: "{{ item.name }} {{ item.major }}"
+    template_kind: "script"
+    provisioning_template: "Windows peSetup.cmd noproxy"
+    state: present
+  loop: "{{ foreman_operatingsystems }}"
+  when: "'Windows' in item.description"
+  delegate_to: localhost

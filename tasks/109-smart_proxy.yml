@@ -18,6 +18,6 @@
 
 # - name: "trigger assign smart-proxy to subnets"
 #   ansible.builtin.command: echo "this task will trigger an handler"
-#   notify: 
-#     - "Assign Provisioning templates to OS CentOS" 
+#   notify:
+#     - "Assign Provisioning templates to OS CentOS"
 #   delegate_to: localhost
