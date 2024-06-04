@@ -43,10 +43,10 @@
 # Compute tasks + handlers
 - name: Set Compute Resource
   ansible.builtin.include_tasks: "120-compute-resource.yml"
-- name: Set Compute Resource Image
-  ansible.builtin.include_tasks: "121-compute-image.yml"
-- name: Set Compute Profil
-  ansible.builtin.include_tasks: "122-compute-profil.yml"
+# - name: Set Compute Resource Image
+#   ansible.builtin.include_tasks: "121-compute-image.yml"
+# - name: Set Compute Profil
+#   ansible.builtin.include_tasks: "122-compute-profil.yml"
 
 # OS tasks + handlers
 - name: Set provisioning Operating System
