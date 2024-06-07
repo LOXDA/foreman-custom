@@ -24,7 +24,7 @@
 #   delegate_to: localhost
 
 # Auth sources
-# - ansible.builtin.include_tasks: "100-auth-source.yml"
+- ansible.builtin.include_tasks: "100-auth-source.yml"
 
 # Common stuff
 - name: Set Organization
