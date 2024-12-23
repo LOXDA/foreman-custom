@@ -1,20 +1,5 @@
 ---
-# - name: Display Target Variables
-#   ansible.builtin.debug:
-#     msg: |
-#       ====================== Display Variables For Provisioning =======================================
-#
-#                                  Ansible Playbook: {{ ansible_play_name }}
-#                                  Target.PuppetURl: {{ foreman_host_puppet }}
-#                                    Target.Foreman: {{ foreman_host_app }}
-#                                 Target.ForemanUrl: {{ foreman_url_app }}
-#                                      Target.Proxy: {{ foreman_host_proxy }}
-#                                   Target.ProxyUrl: {{ foreman_url_proxy }}
-#                                       Target.User: {{ foreman_admin_username }}
-#                                   Target.Password: {{ foreman_admin_password }}
-#
-#       =================================================================================================
-#
+
 # - name: Foremann APP webapp check status
 #   theforeman.foreman.status_info:
 #     server_url: "{{ foreman_url_app }}"
@@ -43,10 +28,10 @@
 # Compute tasks + handlers
 - name: Set Compute Resource
   ansible.builtin.include_tasks: "120-compute-resource.yml"
-# - name: Set Compute Resource Image
-#   ansible.builtin.include_tasks: "121-compute-image.yml"
-# - name: Set Compute Profil
-#   ansible.builtin.include_tasks: "122-compute-profil.yml"
+- name: Set Compute Resource Image
+  ansible.builtin.include_tasks: "121-compute-image.yml"
+- name: Set Compute Profil
+  ansible.builtin.include_tasks: "122-compute-profil.yml"
 
 # OS tasks + handlers
 - name: Set provisioning Operating System
@@ -77,3 +62,20 @@
 - name: Set users and groups
   ansible.builtin.include_tasks: "198-perms-usergroup.yml"
 # - name: Set permissions Usersansible.builtin.include_tasks: "198-perms-user.yml"
+
+- name: Display Target Variables
+  ansible.builtin.debug:
+    msg: |
+      ====================== Display Variables For Provisioning =======================================
+
+                                 Ansible Playbook: {{ ansible_play_name }}
+                                   Target.Foreman: {{ foreman_host_app }}
+                                Target.ForemanUrl: {{ foreman_url_app }}
+
+      =================================================================================================
+
+#                                     Target.Proxy: {{ foreman_host_proxy }}
+#                                  Target.ProxyUrl: {{ foreman_url_proxy }}
+#                                 Target.PuppetURl: {{ foreman_host_puppet }}
+#                                      Target.User: {{ foreman_admin_username }}
+#                                  Target.Password: {{ foreman_admin_password }}
