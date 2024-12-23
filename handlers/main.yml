@@ -30,7 +30,7 @@
   when: "'Debian' in item.name"
   delegate_to: localhost
 
-# Debian set default : finish
+# Debian set default : UserData
 - name: "Set Debian default Provisioning templates to OS user_data"
   theforeman.foreman.os_default_template:
     username: "{{ foreman_admin_username }}"
