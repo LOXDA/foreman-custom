@@ -185,6 +185,7 @@
     family: "{{ item.family }}"
     provisioning_templates:
       - ESXi iPXE Common
+      - ESXi Minimal Kickstart
       - ESXi Complex Kickstart
     state: present
   loop: "{{ foreman_operatingsystems }}"

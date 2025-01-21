@@ -5,7 +5,10 @@ rootpw --iscrypted <%= root_pass %>
 install --firstdisk --overwritevmfs --novmfsondisk
 
 # Set the network to DHCP on the first network adapter
-network --bootproto=dhcp --device=<%= @host.mac %>
+#network --bootproto=dhcp --device=<%= @host.mac %>
+
+#network configuration
+network --bootproto=static --device=vmnic0 --ip=<%= @host.ip %> --gateway=<%= @host.subnet.gateway %> --nameserver=<%= @host.subnet.dns_primary %> --netmask=<%= @host.subnet.mask %> --hostname=<%= @host.name %> --addvmportgroup=0 --vlanid=0
 
 %post --interpreter=busybox
 # Add temporary DNS resolution so the foreman call works

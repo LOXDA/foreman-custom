@@ -419,8 +419,8 @@ __NTP_CONFIG__
 # enable firewall
 #esxcli network firewall set --default-action false --enabled yes
 
-_lan="172.16.0.0/16"
-_whitelist="172.16.202.10/32 172.16.202.32/32 172.16.202.29/32"
+# _lan="172.16.0.0/16"
+# _whitelist="172.16.202.10/32 172.16.202.32/32 172.16.202.29/32"
 
 # Default block
 #esxcli network firewall set -d false
@@ -429,34 +429,34 @@ _whitelist="172.16.202.10/32 172.16.202.32/32 172.16.202.29/32"
 #done
 
 # Allow outgoing to ANY
-esxcli network firewall ruleset set --allowed-all true --ruleset-id=dns
-esxcli network firewall ruleset set --allowed-all true --ruleset-id=esxupdate
-esxcli network firewall ruleset set --allowed-all true --ruleset-id=httpClient
-esxcli network firewall ruleset set --allowed-all true --ruleset-id=ntpClient
-esxcli network firewall ruleset set --allowed-all true --ruleset-id=nfsClient
-esxcli network firewall ruleset set --allowed-all true --ruleset-id=nfs41Client
+# esxcli network firewall ruleset set --allowed-all true --ruleset-id=dns
+# esxcli network firewall ruleset set --allowed-all true --ruleset-id=esxupdate
+# esxcli network firewall ruleset set --allowed-all true --ruleset-id=httpClient
+# esxcli network firewall ruleset set --allowed-all true --ruleset-id=ntpClient
+# esxcli network firewall ruleset set --allowed-all true --ruleset-id=nfsClient
+# esxcli network firewall ruleset set --allowed-all true --ruleset-id=nfs41Client
 
 # Allow outgoing to LAN
-for _ip in $lan; do
-  esxcli network firewall ruleset allowedip add -i=$_ip -r=syslog
-done
+# for _ip in $lan; do
+#   esxcli network firewall ruleset allowedip add -i=$_ip -r=syslog
+# done
 
 # Allow incoming from LAN
-for _ip in $_lan; do
-  esxcli network firewall ruleset allowedip add -i=$_ip -r=snmp
-  esxcli network firewall ruleset allowedip add -i=$_ip -r=sshServer
-  esxcli network firewall ruleset allowedip add -i=$_ip -r=webAccess
-  esxcli network firewall ruleset allowedip add -i=$_ip -r=vSphereClient
-done
+# for _ip in $_lan; do
+#   esxcli network firewall ruleset allowedip add -i=$_ip -r=snmp
+#   esxcli network firewall ruleset allowedip add -i=$_ip -r=sshServer
+#   esxcli network firewall ruleset allowedip add -i=$_ip -r=webAccess
+#   esxcli network firewall ruleset allowedip add -i=$_ip -r=vSphereClient
+# done
 
 # Allow incoming from WHITELIST
-for _ip in $_whitelist; do
-  esxcli network firewall ruleset allowedip add -i=$_ip -r=sshServer
-  esxcli network firewall ruleset allowedip add -i=$_ip -r=webAccess
-  esxcli network firewall ruleset allowedip add -i=$_ip -r=vSphereClient
-done
+# for _ip in $_whitelist; do
+#   esxcli network firewall ruleset allowedip add -i=$_ip -r=sshServer
+#   esxcli network firewall ruleset allowedip add -i=$_ip -r=webAccess
+#   esxcli network firewall ruleset allowedip add -i=$_ip -r=vSphereClient
+# done
 
-/usr/bin/vim-cmd internalsvc/refresh_network
+# /usr/bin/vim-cmd internalsvc/refresh_network
 
 # enter maintenance mode
 #esxcli system maintenanceMode set -e true

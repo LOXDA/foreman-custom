@@ -1,13 +1,13 @@
 ---
 
-# CentOS templates
-# - include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_CentOS.yml
+# - name: CentOS templates
+#   ansible.builtin.include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_CentOS.yml
 
 - name: Debian templates
   ansible.builtin.include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_Debian.yml
+ 
+- name: ESXi templates
+  ansible.builtin.include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_ESXi.yml
 
-# ESXi templates
-# - include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_ESXi.yml
-
-# Windows templates
-# - include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_Windows.yml
+# - name: Windows templates
+#   ansible.builtin.include_tasks: ../roles/foreman-custom/tasks/os_provisioning_templates_Windows.yml

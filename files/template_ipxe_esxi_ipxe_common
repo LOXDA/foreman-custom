@@ -2,5 +2,5 @@
 # Detect firmware type of iPXE and set appropriate ESXi Bootloader
 iseq ${platform} efi && set esxi_bootloader efi/boot/bootx64.efi || set esxi_bootloader mboot.c32
 dhcp
-kernel http://<%= foreman_server_fqdn %>/<%= @host.operatingsystem.name %>/${esxi_bootloader} -c http://<%= foreman_server_fqdn %>/boot-<%= @host.operatingsystem.name %>.cfg ks=<%= foreman_url("provision") %> BOOTIF=01-<%= @host.mac.gsub(":", "-") %>
+kernel http://${next-server}:8000/httpboot/esxi/<%= @host.operatingsystem.name %>/${esxi_bootloader} -c http://${next-server}:8000/httpboot/esxi/boot-<%= @host.operatingsystem.name %>.cfg ks=<%= foreman_url("provision") %> BOOTIF=01-<%= @host.mac.gsub(":", "-") %>
 boot
